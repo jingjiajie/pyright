@@ -77,7 +77,10 @@ const WhitespaceRegExp = /\s/g;
 const DoubleTickRegExp = /``/g;
 const TildeRegExp = /~/g;
 const PlusRegExp = /\+/g;
-const UnescapedMarkdownCharsRegExp = /(?<!\\)([_*~[\]])/g;
+// Safari can't recognize lookbehind
+// https://bugs.webkit.org/show_bug.cgi?id=174931
+// const UnescapedMarkdownCharsRegExp = /(?<!\\)([_*~[\]])/g;
+const UnescapedMarkdownCharsRegExp = /[_*~[\]]/g;
 const linkRegExp = /(\[.*\]\(.*\))/g;
 
 const CodeBlockStartRegExp = /^\s*(?<block>`{3}(?!`)|~{3}(?!~))(\w*)/;
@@ -385,7 +388,13 @@ class DocStringConverter {
                 if (linkRegExp.test(item)) {
                     this._append(item);
                 } else {
-                    this._append(item.replace(UnescapedMarkdownCharsRegExp, '\\$1'));
+                    //this._append(item.replace(UnescapedMarkdownCharsRegExp, '\\$1'));
+                    this._append(
+                        item.replace(
+                            UnescapedMarkdownCharsRegExp,
+                            (match, offset) => `${offset === 0 || item.charAt(offset - 1) !== '\\' ? '\\' : ''}${match}`
+                        )
+                    );
                 }
             });
         }

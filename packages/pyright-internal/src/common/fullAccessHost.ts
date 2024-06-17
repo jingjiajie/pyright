@@ -7,19 +7,17 @@
  */
 
 import * as child_process from 'child_process';
-import { CancellationToken } from 'vscode-languageserver';
 
 import { PythonPathResult } from '../analyzer/pythonPathUtils';
-import { OperationCanceledException, onCancellationRequested, throwIfCancellationRequested } from './cancellationUtils';
 import { PythonPlatform } from './configOptions';
 import { assertNever } from './debug';
-import { HostKind, NoAccessHost, ScriptOutput } from './host';
+import { HostKind, NoAccessHost } from './host';
 import { normalizePath } from './pathUtils';
 import { PythonVersion } from './pythonVersion';
+import { ServiceKeys } from './serviceKeys';
 import { ServiceProvider } from './serviceProvider';
 import { Uri } from './uri/uri';
 import { isDirectory } from './uri/uriUtils';
-import { ServiceKeys } from './serviceKeys';
 
 // preventLocalImports removes the working directory from sys.path.
 // The -c flag adds it automatically, which can allow some stdlib
@@ -141,59 +139,59 @@ export class FullAccessHost extends LimitedAccessHost {
         }
     }
 
-    override runScript(
-        pythonPath: Uri | undefined,
-        script: Uri,
-        args: string[],
-        cwd: Uri,
-        token: CancellationToken
-    ): Promise<ScriptOutput> {
-        // If it is already cancelled, don't bother to run script.
-        throwIfCancellationRequested(token);
+    // override runScript(
+    //     pythonPath: Uri | undefined,
+    //     script: Uri,
+    //     args: string[],
+    //     cwd: Uri,
+    //     token: CancellationToken
+    // ): Promise<ScriptOutput> {
+    //     // If it is already cancelled, don't bother to run script.
+    //     throwIfCancellationRequested(token);
 
-        // What to do about conda here?
-        return new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
-            let stdout = '';
-            let stderr = '';
-            const commandLineArgs = [script.getFilePath(), ...args];
+    //     // What to do about conda here?
+    //     return new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
+    //         let stdout = '';
+    //         let stderr = '';
+    //         const commandLineArgs = [script.getFilePath(), ...args];
 
-            const child = this._executePythonInterpreter(pythonPath?.getFilePath(), (p) =>
-                child_process.spawn(p, commandLineArgs, { cwd: cwd.getFilePath() })
-            );
-            const tokenWatch = onCancellationRequested(token, () => {
-                if (child) {
-                    try {
-                        if (child.pid && child.exitCode === null) {
-                            if (process.platform === 'win32') {
-                                // Windows doesn't support SIGTERM, so execute taskkill to kill the process
-                                child_process.execSync(`taskkill /pid ${child.pid} /T /F > NUL 2>&1`);
-                            } else {
-                                process.kill(child.pid);
-                            }
-                        }
-                    } catch {
-                        // Ignore.
-                    }
-                }
-                reject(new OperationCanceledException());
-            });
-            if (child) {
-                child.stdout.on('data', (d) => (stdout = stdout.concat(d)));
-                child.stderr.on('data', (d) => (stderr = stderr.concat(d)));
-                child.on('error', (e) => {
-                    tokenWatch.dispose();
-                    reject(e);
-                });
-                child.on('exit', () => {
-                    tokenWatch.dispose();
-                    resolve({ stdout, stderr });
-                });
-            } else {
-                tokenWatch.dispose();
-                reject(new Error(`Cannot start python interpreter with script ${script}`));
-            }
-        });
-    }
+    //         const child = this._executePythonInterpreter(pythonPath?.getFilePath(), (p) =>
+    //             child_process.spawn(p, commandLineArgs, { cwd: cwd.getFilePath() })
+    //         );
+    //         const tokenWatch = onCancellationRequested(token, () => {
+    //             if (child) {
+    //                 try {
+    //                     if (child.pid && child.exitCode === null) {
+    //                         if (process.platform === 'win32') {
+    //                             // Windows doesn't support SIGTERM, so execute taskkill to kill the process
+    //                             child_process.execSync(`taskkill /pid ${child.pid} /T /F > NUL 2>&1`);
+    //                         } else {
+    //                             process.kill(child.pid);
+    //                         }
+    //                     }
+    //                 } catch {
+    //                     // Ignore.
+    //                 }
+    //             }
+    //             reject(new OperationCanceledException());
+    //         });
+    //         if (child) {
+    //             child.stdout.on('data', (d) => (stdout = stdout.concat(d)));
+    //             child.stderr.on('data', (d) => (stderr = stderr.concat(d)));
+    //             child.on('error', (e) => {
+    //                 tokenWatch.dispose();
+    //                 reject(e);
+    //             });
+    //             child.on('exit', () => {
+    //                 tokenWatch.dispose();
+    //                 resolve({ stdout, stderr });
+    //             });
+    //         } else {
+    //             tokenWatch.dispose();
+    //             reject(new Error(`Cannot start python interpreter with script ${script}`));
+    //         }
+    //     });
+    // }
 
     private _executePythonInterpreter<T>(
         pythonPath: string | undefined,

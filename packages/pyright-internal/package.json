@@ -1,10 +1,10 @@
 {
-    "name": "pyright-internal",
+    "name": "pyright-internal-browser",
     "displayName": "pyright",
     "description": "Type checker for the Python language",
     "version": "1.1.367",
     "license": "MIT",
-    "private": true,
+    "private": false,
     "files": [
         "dist"
     ],

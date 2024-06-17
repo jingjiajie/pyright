@@ -19,21 +19,22 @@ import { AnalysisResults } from './analyzer/analysis';
 import { CacheManager } from './analyzer/cacheManager';
 import { ImportResolver } from './analyzer/importResolver';
 import { isPythonBinary } from './analyzer/pythonPathUtils';
-import { BackgroundAnalysis } from './backgroundAnalysis';
+// import { BackgroundAnalysis } from './backgroundAnalysis';
 import { BackgroundAnalysisBase } from './backgroundAnalysisBase';
 import { CommandController } from './commands/commandController';
-import { getCancellationFolderName } from './common/cancellationUtils';
+// import { getCancellationFolderName } from './common/cancellationUtils';
 import { ConfigOptions, SignatureDisplayType } from './common/configOptions';
 import { ConsoleWithLogLevel, LogLevel, convertLogLevel } from './common/console';
-import { isDebugMode, isDefined, isString } from './common/core';
+import { isDefined, isString } from './common/core';
 import { resolvePathWithEnvVariables } from './common/envVarUtils';
 import { FileBasedCancellationProvider } from './common/fileBasedCancellationUtils';
 import { FileSystem } from './common/fileSystem';
+import { nullFileWatcherHandler, nullFileWatcherProvider } from './common/fileWatcher';
 import { FullAccessHost } from './common/fullAccessHost';
 import { Host } from './common/host';
 import { ServerSettings } from './common/languageServerInterface';
 import { ProgressReporter } from './common/progressReporter';
-import { RealTempFile, WorkspaceFileWatcherProvider, createFromRealFileSystem } from './common/realFileSystem';
+import { RealTempFile, createFromRealFileSystem } from './common/realFileSystem';
 import { ServiceProvider } from './common/serviceProvider';
 import { createServiceProvider } from './common/serviceProviderExtensions';
 import { Uri } from './common/uri/uri';
@@ -54,7 +55,7 @@ export class PyrightServer extends LanguageServerBase {
 
         const tempFile = new RealTempFile();
         const console = new ConsoleWithLogLevel(connection.console);
-        const fileWatcherProvider = new WorkspaceFileWatcherProvider();
+        const fileWatcherProvider = nullFileWatcherProvider;
         const fileSystem = realFileSystem ?? createFromRealFileSystem(tempFile, console, fileWatcherProvider);
         const pyrightFs = new PyrightFileSystem(fileSystem);
         const cacheManager = new CacheManager(maxWorkers);
@@ -73,7 +74,7 @@ export class PyrightServer extends LanguageServerBase {
                 rootDirectory: realPathRoot,
                 version,
                 serviceProvider,
-                fileWatcherHandler: fileWatcherProvider,
+                fileWatcherHandler: nullFileWatcherHandler,
                 cancellationProvider: new FileBasedCancellationProvider('bg'),
                 maxAnalysisTimeInForeground,
                 supportedCodeActions: [CodeActionKind.QuickFix, CodeActionKind.SourceOrganizeImports],
@@ -216,13 +217,14 @@ export class PyrightServer extends LanguageServerBase {
     }
 
     createBackgroundAnalysis(serviceId: string): BackgroundAnalysisBase | undefined {
-        if (isDebugMode() || !getCancellationFolderName()) {
-            // Don't do background analysis if we're in debug mode or an old client
-            // is used where cancellation is not supported.
-            return undefined;
-        }
+        // if (isDebugMode() || !getCancellationFolderName()) {
+        //     // Don't do background analysis if we're in debug mode or an old client
+        //     // is used where cancellation is not supported.
+        //     return undefined;
+        // }
 
-        return new BackgroundAnalysis(this.serverOptions.serviceProvider);
+        // return new BackgroundAnalysis(this.serverOptions.serviceProvider);
+        return undefined;
     }
 
     protected override createHost() {

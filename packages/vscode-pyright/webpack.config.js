@@ -4,25 +4,28 @@
  */
 
 const path = require('path');
-const CopyPlugin = require('copy-webpack-plugin');
+const { ProvidePlugin, DefinePlugin } = require('webpack');
+//const CopyPlugin = require('copy-webpack-plugin');
 const { cacheConfig, monorepoResourceNameMapper, tsconfigResolveAliases } = require('../../build/lib/webpack');
 
 const outPath = path.resolve(__dirname, 'dist');
-const typeshedFallback = path.resolve(__dirname, '..', 'pyright-internal', 'typeshed-fallback');
+//const typeshedFallback = path.resolve(__dirname, '..', 'pyright-internal', 'typeshed-fallback');
 
 /**@type {(env: any, argv: { mode: 'production' | 'development' | 'none' }) => import('webpack').Configuration}*/
 module.exports = (_, { mode }) => {
     return {
+        mode: 'none',
         context: __dirname,
         entry: {
-            extension: './src/extension.ts',
-            server: './src/server.ts',
+            //extension: './src/extension.ts',
+            server: './src/browserMain.ts',
         },
-        target: 'node',
+        target: 'webworker',
         output: {
             filename: '[name].js',
             path: outPath,
-            libraryTarget: 'commonjs2',
+            library: 'serverExportVar',
+            libraryTarget: 'var',
             devtoolModuleFilenameTemplate:
                 mode === 'development' ? '../[resource-path]' : monorepoResourceNameMapper('vscode-pyright'),
             clean: true,
@@ -37,8 +40,21 @@ module.exports = (_, { mode }) => {
             timings: true,
         },
         resolve: {
+            mainFields: ['browser', 'module', 'main'],
             extensions: ['.ts', '.js'],
-            alias: tsconfigResolveAliases('tsconfig.json'),
+            alias: {
+                ...tsconfigResolveAliases('tsconfig.json'),
+                './common/realFileSystem': path.resolve(__dirname, 'src/fakeFileSystem'),
+            },
+            fallback: {
+                path: require.resolve('path-browserify'),
+                os: false,
+                crypto: false,
+                buffer: require.resolve('buffer/'),
+                stream: false,
+                child_process: false,
+                fs: false,
+            },
         },
         externals: {
             vscode: 'commonjs vscode',
@@ -53,8 +69,23 @@ module.exports = (_, { mode }) => {
                         configFile: 'tsconfig.json',
                     },
                 },
+                {
+                    test: /src[\\|/]typeShed\.ts$/,
+                    use: [
+                        {
+                            loader: path.resolve(__dirname, 'typeshed-loader'),
+                        },
+                    ],
+                },
             ],
         },
-        plugins: [new CopyPlugin({ patterns: [{ from: typeshedFallback, to: 'typeshed-fallback' }] })],
+        plugins: [
+            new DefinePlugin({
+                process: "{ env: {}, execArgv: [], cwd: () => '/' }",
+            }),
+            new ProvidePlugin({
+                Buffer: ['buffer', 'Buffer'],
+            }),
+        ],
     };
 };

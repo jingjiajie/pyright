@@ -1004,28 +1004,26 @@ export class Program {
     }
 
     private _handleMemoryHighUsage() {
-        const cacheUsage = this._cacheManager.getCacheUsage();
-        const usedHeapRatio = this._cacheManager.getUsedHeapRatio(
-            this._configOptions.verboseOutput ? this._console : undefined
-        );
-
-        // If the total cache has exceeded 75%, determine whether we should empty
-        // the cache. If the usedHeapRatio has exceeded 90%, we should definitely
-        // empty the cache. This can happen before the cacheUsage maxes out because
-        // we might be on the background thread and a bunch of the cacheUsage is on the main
-        // thread.
-        if (cacheUsage > 0.75 || usedHeapRatio > 0.9) {
-            // The type cache uses a Map, which has an absolute limit of 2^24 entries
-            // before it will fail. If we cross the 95% mark, we'll empty the cache.
-            const absoluteMaxCacheEntryCount = (1 << 24) * 0.9;
-            const typeCacheEntryCount = this._evaluator!.getTypeCacheEntryCount();
-
-            // If we use more than 90% of the heap size limit, avoid a crash
-            // by emptying the type cache.
-            if (typeCacheEntryCount > absoluteMaxCacheEntryCount || usedHeapRatio > 0.9) {
-                this._cacheManager.emptyCache(this._console);
-            }
-        }
+        // const cacheUsage = this._cacheManager.getCacheUsage();
+        // const usedHeapRatio = this._cacheManager.getUsedHeapRatio(
+        //     this._configOptions.verboseOutput ? this._console : undefined
+        // );
+        // // If the total cache has exceeded 75%, determine whether we should empty
+        // // the cache. If the usedHeapRatio has exceeded 90%, we should definitely
+        // // empty the cache. This can happen before the cacheUsage maxes out because
+        // // we might be on the background thread and a bunch of the cacheUsage is on the main
+        // // thread.
+        // if (cacheUsage > 0.75 || usedHeapRatio > 0.9) {
+        //     // The type cache uses a Map, which has an absolute limit of 2^24 entries
+        //     // before it will fail. If we cross the 95% mark, we'll empty the cache.
+        //     const absoluteMaxCacheEntryCount = (1 << 24) * 0.9;
+        //     const typeCacheEntryCount = this._evaluator!.getTypeCacheEntryCount();
+        //     // If we use more than 90% of the heap size limit, avoid a crash
+        //     // by emptying the type cache.
+        //     if (typeCacheEntryCount > absoluteMaxCacheEntryCount || usedHeapRatio > 0.9) {
+        //         this._cacheManager.emptyCache(this._console);
+        //     }
+        // }
     }
 
     // Discards all cached parse results and file contents to free up memory.

@@ -7,8 +7,6 @@
  * Class that represents a single Python source or stub file.
  */
 
-import { isMainThread } from 'worker_threads';
-
 import { OperationCanceledException } from '../common/cancellationUtils';
 import { appendArray } from '../common/collectionUtils';
 import { ConfigOptions, ExecutionEnvironment, getBasicDiagnosticRuleSet } from '../common/configOptions';
@@ -22,6 +20,8 @@ import { LogTracker, getPathForLogging } from '../common/logTracker';
 import { stripFileExtension } from '../common/pathUtils';
 import { convertOffsetsToRange, convertTextRangeToRange } from '../common/positionUtils';
 import { ServiceKeys } from '../common/serviceKeys';
+import { ServiceProvider } from '../common/serviceProvider';
+import '../common/serviceProviderExtensions';
 import * as StringUtils from '../common/stringUtils';
 import { Range, TextRange, getEmptyRange } from '../common/textRange';
 import { TextRangeCollection } from '../common/textRangeCollection';
@@ -46,8 +46,6 @@ import { SourceMapper } from './sourceMapper';
 import { SymbolTable } from './symbol';
 import { TestWalker } from './testWalker';
 import { TypeEvaluator } from './typeEvaluatorTypes';
-import '../common/serviceProviderExtensions';
-import { ServiceProvider } from '../common/serviceProvider';
 
 // Limit the number of import cycles tracked per source file.
 const _maxImportCyclesPerFile = 4;
@@ -307,7 +305,7 @@ export class SourceFile {
         }
 
         // 'FG' or 'BG' based on current thread.
-        this._logTracker = logTracker ?? new LogTracker(console, isMainThread ? 'FG' : 'BG');
+        this._logTracker = logTracker ?? new LogTracker(console, 'FG');
         this._ipythonMode = ipythonMode ?? IPythonMode.None;
     }
 

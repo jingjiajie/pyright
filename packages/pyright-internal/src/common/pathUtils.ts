@@ -13,7 +13,9 @@ import { Char } from './charCodes';
 import { some } from './collectionUtils';
 import { GetCanonicalFileName, identity } from './core';
 import * as debug from './debug';
+import { FileSystem } from './fileSystem';
 import { equateStringsCaseInsensitive, equateStringsCaseSensitive } from './stringUtils';
+import { UriEx } from './uri/uriUtils';
 
 export interface FileSpec {
     // File specs can contain wildcard characters (**, *, ?). This
@@ -688,4 +690,29 @@ function getPathComponentsRelativeTo(
         relative.push('..');
     }
     return ['', ...relative, ...components];
+}
+
+const enum FileSystemEntryKind {
+    File,
+    Directory,
+}
+
+export function directoryExists(fs: FileSystem, path: string): boolean {
+    return fileSystemEntryExists(fs, path, FileSystemEntryKind.Directory);
+}
+
+function fileSystemEntryExists(fs: FileSystem, path: string, entryKind: FileSystemEntryKind): boolean {
+    try {
+        const stat = fs.statSync(UriEx.parse(path));
+        switch (entryKind) {
+            case FileSystemEntryKind.File:
+                return stat.isFile();
+            case FileSystemEntryKind.Directory:
+                return stat.isDirectory();
+            default:
+                return false;
+        }
+    } catch (e: any) {
+        return false;
+    }
 }

@@ -8,12 +8,11 @@
  * if memory usage approaches the max heap space.
  */
 
-import type { HeapInfo } from 'v8';
+// import type { HeapInfo } from 'v8';
 import { Worker } from 'worker_threads';
 import { AnalysisRequest } from '../backgroundAnalysisBase';
-import { ConsoleInterface } from '../common/console';
 import { fail } from '../common/debug';
-import { getHeapStatistics } from '../common/memUtils';
+// import { getHeapStatistics } from '../common/memUtils';
 
 export interface CacheOwner {
     // Returns a number between 0 and 1 that indicates how full
@@ -97,47 +96,47 @@ export class CacheManager {
         return totalUsage;
     }
 
-    emptyCache(console?: ConsoleInterface) {
-        if (console) {
-            const heapStats = getHeapStatistics();
+    // emptyCache(console?: ConsoleInterface) {
+    //     if (console) {
+    //         const heapStats = getHeapStatistics();
 
-            console.info(
-                `Emptying type cache to avoid heap overflow. Used ${this._convertToMB(
-                    heapStats.used_heap_size
-                )} out of ${this._convertToMB(heapStats.heap_size_limit)}.`
-            );
-        }
+    //         console.info(
+    //             `Emptying type cache to avoid heap overflow. Used ${this._convertToMB(
+    //                 heapStats.used_heap_size
+    //             )} out of ${this._convertToMB(heapStats.heap_size_limit)}.`
+    //         );
+    //     }
 
-        this._cacheOwners.forEach((p) => {
-            p.emptyCache();
-        });
-    }
+    //     this._cacheOwners.forEach((p) => {
+    //         p.emptyCache();
+    //     });
+    // }
 
     // Returns a ratio of used bytes to total bytes.
-    getUsedHeapRatio(console?: ConsoleInterface) {
-        const heapStats = getHeapStatistics();
-        let usage = this._getTotalHeapUsage(heapStats);
+    // getUsedHeapRatio(console?: ConsoleInterface) {
+    //     const heapStats = getHeapStatistics();
+    //     let usage = this._getTotalHeapUsage(heapStats);
 
-        if (console && Date.now() - this._lastHeapStats > 1000) {
-            // This can fill up the user's console, so we only do it once per second.
-            this._lastHeapStats = Date.now();
-            console.info(
-                `Heap stats: ` +
-                    `total_heap_size=${this._convertToMB(heapStats.total_heap_size)}, ` +
-                    `used_heap_size=${this._convertToMB(heapStats.used_heap_size)}, ` +
-                    `cross_worker_used_heap_size=${this._convertToMB(usage)}, ` +
-                    `total_physical_size=${this._convertToMB(heapStats.total_physical_size)}, ` +
-                    `total_available_size=${this._convertToMB(heapStats.total_available_size)}, ` +
-                    `heap_size_limit=${this._convertToMB(heapStats.heap_size_limit)}`
-            );
-        }
+    //     if (console && Date.now() - this._lastHeapStats > 1000) {
+    //         // This can fill up the user's console, so we only do it once per second.
+    //         this._lastHeapStats = Date.now();
+    //         console.info(
+    //             `Heap stats: ` +
+    //                 `total_heap_size=${this._convertToMB(heapStats.total_heap_size)}, ` +
+    //                 `used_heap_size=${this._convertToMB(heapStats.used_heap_size)}, ` +
+    //                 `cross_worker_used_heap_size=${this._convertToMB(usage)}, ` +
+    //                 `total_physical_size=${this._convertToMB(heapStats.total_physical_size)}, ` +
+    //                 `total_available_size=${this._convertToMB(heapStats.total_available_size)}, ` +
+    //                 `heap_size_limit=${this._convertToMB(heapStats.heap_size_limit)}`
+    //         );
+    //     }
 
-        // Total usage seems to be off by about 5%, so we'll add that back in
-        // to make the ratio more accurate. (200MB at 4GB)
-        usage += usage * 0.05;
+    //     // Total usage seems to be off by about 5%, so we'll add that back in
+    //     // to make the ratio more accurate. (200MB at 4GB)
+    //     usage += usage * 0.05;
 
-        return usage / heapStats.heap_size_limit;
-    }
+    //     return usage / heapStats.heap_size_limit;
+    // }
 
     private _convertToMB(bytes: number) {
         return `${Math.round(bytes / (1024 * 1024))}MB`;
@@ -157,18 +156,18 @@ export class CacheManager {
         }
     }
 
-    private _getTotalHeapUsage(heapStats: HeapInfo): number {
-        // If the SharedArrayBuffer is supported, we'll use it to to get usage
-        // from other threads and add that to our own
-        const buffer = this._getSharedUsageBuffer();
-        if (buffer) {
-            const view = new Float64Array(buffer);
-            view[this._sharedUsagePosition] = heapStats.used_heap_size;
-            return view.reduce((a, b) => a + b, 0);
-        }
+    // private _getTotalHeapUsage(heapStats: HeapInfo): number {
+    //     // If the SharedArrayBuffer is supported, we'll use it to to get usage
+    //     // from other threads and add that to our own
+    //     const buffer = this._getSharedUsageBuffer();
+    //     if (buffer) {
+    //         const view = new Float64Array(buffer);
+    //         view[this._sharedUsagePosition] = heapStats.used_heap_size;
+    //         return view.reduce((a, b) => a + b, 0);
+    //     }
 
-        return heapStats.used_heap_size;
-    }
+    //     return heapStats.used_heap_size;
+    // }
 }
 
 export namespace CacheManager {

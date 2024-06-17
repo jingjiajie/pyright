@@ -1572,7 +1572,7 @@
         "package": "vsce package",
         "postpackage": "node ./build/renamePackage.js vscode-pyright",
         "vscode:prepublish": "node ./build/checkPackage.js && npm run clean && webpack --mode production --progress",
-        "webpack": "webpack --mode development --progress",
+        "webpack": "webpack --mode production --progress",
         "webpack-dev": "npm run clean && webpack --mode development --watch --progress"
     },
     "dependencies": {
